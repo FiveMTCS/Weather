@@ -5,7 +5,7 @@
  */
 
 (function () {
-	let currentMeteo: Weather = Weather.CLEAR;
+	let serverWeather: Weather = Weather.CLEAR;
 	onLoadModule('system/weather', (module: TcsModule) => {
 		module.createFunction('launchServerWeather', () => {
 			const timeRandomMeteo: number = 90 * 60 * 1000;
@@ -24,31 +24,31 @@
 				Weather.XMAS,
 			];
 
-			currentMeteo =
+			serverWeather =
 				meteoAvailable[Math.floor(Math.random() * meteoAvailable.length)];
-			setClientsWeather(currentMeteo);
-			module.printDebug('Set weather : ' + currentMeteo);
+			setClientsWeather();
+			module.printDebug('Set weather : ' + serverWeather);
 
 			TCS.threads.createThread(module, timeRandomMeteo, () => {
 				const filtredMeteos = meteoAvailable.filter(
-					(weather: Weather) => weather !== currentMeteo
+					(weather: Weather) => weather !== serverWeather
 				);
 
-				currentMeteo =
+				serverWeather =
 					filtredMeteos[Math.floor(Math.random() * filtredMeteos.length)];
 
-				setClientsWeather(currentMeteo);
-				module.printDebug('Set weather : ' + currentMeteo);
+				setClientsWeather();
+				module.printDebug('Set weather : ' + serverWeather);
 			});
 		});
 
-		async function setClientsWeather(currentMeteo: Weather) {
+		async function setClientsWeather() {
 			const setWeatherEvent: TcsClientEvent = {
 				target: TcsEventTarget.CLIENT,
 				targetId: -1,
 				eventType: TcsEventsList.WEATHER_SET,
 				data: {
-					newWeather: currentMeteo,
+					newWeather: serverWeather,
 				},
 			};
 
@@ -58,8 +58,13 @@
 		TCS.callbacks.RegisterServerCallback(
 			'weather:askWeather',
 			(source: number, args: any) => {
-				return currentMeteo;
+				return serverWeather;
 			}
 		);
+
+		module.createFunction('setWeather', (nWeather: Weather) => {
+			serverWeather = nWeather;
+			setClientsWeather();
+		});
 	});
 })();

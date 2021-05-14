@@ -44,5 +44,11 @@
 				return { serverHours, serverMinutes };
 			}
 		);
+
+		module.createFunction('setTime', (nHours: number, nMinutes: number) => {
+			serverHours = nHours;
+			serverMinutes = nMinutes;
+			setClientsTime();
+		});
 	});
 })();
