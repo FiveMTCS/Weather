@@ -6,15 +6,16 @@
 
 (function () {
 	onLoadModule('system/weather', (module: TcsModule) => {
-		let serverHours: number = 12;
-		let serverMinutes: number = 0;
+		let hours: number = 12;
+		let minutes: number = 0;
 		let betweenSync: number = 10 * 1000;
-		module.createFunction('launchServerTime', () => {
+
+		module.createFunction('startServerTime', () => {
 			let nextSync: number = 0;
 			TCS.threads.createThread(module, 1000, () => {
-				serverMinutes = (serverMinutes + 1) % 60;
-				if (serverMinutes === 0) {
-					serverHours = (serverHours + 1) % 24;
+				minutes = (minutes + 1) % 60;
+				if (minutes === 0) {
+					hours = (hours + 1) % 24;
 				}
 
 				let gameTimer: number = GetGameTimer();
@@ -31,23 +32,20 @@
 				targetId: -1,
 				eventType: TcsEventsList.TIME_SET,
 				data: {
-					newHours: serverHours,
-					newMinutes: serverMinutes,
-				},
+					hours,
+					minutes,
+				} as Clock,
 			};
 			TCS.eventManager.sendEvent(setTimeEvent);
 		}
 
-		TCS.callbacks.RegisterServerCallback(
-			'weather:getTime',
-			(source: number, args: any) => {
-				return { serverHours, serverMinutes };
-			}
-		);
+		TCS.callbacks.RegisterServerCallback('weather:getTime', (source: number, args: any) => {
+			return { hours, minutes } as Clock;
+		});
 
-		module.createFunction('setTime', (nHours: number, nMinutes: number) => {
-			serverHours = nHours;
-			serverMinutes = nMinutes;
+		module.createFunction('setTime', (clock: Clock) => {
+			hours = clock.hours;
+			minutes = clock.minutes;
 			setClientsTime();
 		});
 	});

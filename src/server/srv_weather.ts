@@ -5,11 +5,12 @@
  */
 
 (function () {
-	let serverWeather: Weather = Weather.CLEAR;
 	onLoadModule('system/weather', (module: TcsModule) => {
-		module.createFunction('launchServerWeather', () => {
-			const timeRandomMeteo: number = 90 * 60 * 1000;
-			const meteoAvailable: Weather[] = [
+		let weather: Weather;
+
+		module.createFunction('startServerWeather', () => {
+			const timeRandomWeather: number = 90 * 60 * 1000;
+			const availableWeather: Weather[] = [
 				Weather.BLIZZARD,
 				Weather.CLEAR,
 				Weather.CLEARING,
@@ -24,21 +25,17 @@
 				Weather.XMAS,
 			];
 
-			serverWeather =
-				meteoAvailable[Math.floor(Math.random() * meteoAvailable.length)];
+			let randomId: number = Math.random() * availableWeather.length;
+			weather = availableWeather[Math.floor(randomId)];
 			setClientsWeather();
-			module.printDebug('Set weather : ' + serverWeather);
+			module.printDebug('Set weather : ' + weather);
 
-			TCS.threads.createThread(module, timeRandomMeteo, () => {
-				const filtredMeteos = meteoAvailable.filter(
-					(weather: Weather) => weather !== serverWeather
-				);
-
-				serverWeather =
-					filtredMeteos[Math.floor(Math.random() * filtredMeteos.length)];
-
+			TCS.threads.createThread(module, timeRandomWeather, () => {
+				const filtredWeather = availableWeather.filter((filter: Weather) => weather !== filter);
+				randomId = Math.random() * filtredWeather.length;
+				weather = filtredWeather[Math.floor(randomId)];
 				setClientsWeather();
-				module.printDebug('Set weather : ' + serverWeather);
+				module.printDebug('Set weather : ' + weather);
 			});
 		});
 
@@ -47,23 +44,18 @@
 				target: TcsEventTarget.CLIENT,
 				targetId: -1,
 				eventType: TcsEventsList.WEATHER_SET,
-				data: {
-					newWeather: serverWeather,
-				},
+				data: weather,
 			};
 
 			TCS.eventManager.sendEvent(setWeatherEvent);
 		}
 
-		TCS.callbacks.RegisterServerCallback(
-			'weather:askWeather',
-			(source: number, args: any) => {
-				return serverWeather;
-			}
-		);
+		TCS.callbacks.RegisterServerCallback('weather:askWeather', (source: number, args: any) => {
+			return weather;
+		});
 
 		module.createFunction('setWeather', (nWeather: Weather) => {
-			serverWeather = nWeather;
+			weather = nWeather;
 			setClientsWeather();
 		});
 	});

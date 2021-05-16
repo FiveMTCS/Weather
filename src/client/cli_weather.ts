@@ -6,38 +6,26 @@
 
 (function () {
 	onLoadModule('system/weather', (module: TcsModule) => {
-		let currentWeather: Weather;
-		module.createFunction('launchClientWeather', () => {
+		module.createFunction('startClientWeather', () => {
 			SetWeatherOwnedByNetwork(false);
 			ClearTimecycleModifier();
 			AnimpostfxStopAll();
-			currentWeather = Weather.CLEAR;
+			setWeather(Weather.CLEAR);
 
-			TCS.callbacks.TriggerServerCallback(
-				'weather:askWeather',
-				(currentMeteo: Weather) => {
-					currentWeather = currentMeteo;
-					setWeather();
-				},
-				{}
-			);
+			TCS.callbacks.TriggerServerCallback('weather:askWeather', (current: Weather) => setWeather(current), {});
 		});
 
-		const eventListener = new TcsEventListener(
-			TcsEventsList.WEATHER_SET,
-			({ newWeather }: { newWeather: Weather }) => {
-				currentWeather = newWeather;
-				setWeather();
-			}
-		);
+		const eventListener = new TcsEventListener(TcsEventsList.WEATHER_SET, (weather: Weather) => {
+			setWeather(weather);
+		});
 		TCS.eventManager.addEventHandler(eventListener);
 
-		function setWeather() {
+		function setWeather(weather: Weather) {
 			ClearOverrideWeather();
 			ClearWeatherTypePersist();
-			SetWeatherTypePersist(currentWeather);
-			SetWeatherTypeNow(currentWeather);
-			SetWeatherTypeNowPersist(currentWeather);
+			SetWeatherTypePersist(weather);
+			SetWeatherTypeNow(weather);
+			SetWeatherTypeNowPersist(weather);
 			SetWind(0.1);
 		}
 	});

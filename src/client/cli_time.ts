@@ -6,38 +6,30 @@
 
 (function () {
 	onLoadModule('system/weather', (module: TcsModule) => {
-		let currentHours: number;
-		let currentMinutes: number;
-		module.createFunction('launchClientTime', () => {
+		let hours: number;
+		let minutes: number;
+
+		module.createFunction('startClientTime', () => {
 			TCS.callbacks.TriggerServerCallback(
 				'weather:getTime',
-				({
-					serverHours,
-					serverMinutes,
-				}: {
-					serverHours: number;
-					serverMinutes: number;
-				}) => {
-					currentHours = serverHours;
-					currentMinutes = serverMinutes;
+				(clock: Clock) => {
+					hours = clock.hours;
+					minutes = clock.minutes;
 					setTime();
 				},
 				{}
 			);
 		});
 
-		const eventListener = new TcsEventListener(
-			TcsEventsList.TIME_SET,
-			({ newHours, newMinutes }: { newHours: number; newMinutes: number }) => {
-				currentHours = newHours;
-				currentMinutes = newMinutes;
-				setTime();
-			}
-		);
+		const eventListener = new TcsEventListener(TcsEventsList.TIME_SET, (clock: Clock) => {
+			hours = clock.hours;
+			minutes = clock.minutes;
+			setTime();
+		});
 		TCS.eventManager.addEventHandler(eventListener);
 
 		function setTime() {
-			NetworkOverrideClockTime(currentHours, currentMinutes, 0);
+			NetworkOverrideClockTime(hours, minutes, 0);
 		}
 	});
 })();

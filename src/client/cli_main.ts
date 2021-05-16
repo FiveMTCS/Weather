@@ -7,8 +7,8 @@
 (function () {
 	onTcsLoaded(() => {
 		const weather = new TcsModule(weatherModuleInfos, (module: TcsModule) => {
-			module.fnc('launchClientWeather')();
-			module.fnc('launchClientTime')();
+			module.fnc('startClientWeather')();
+			module.fnc('startClientTime')();
 		});
 
 		TCS.modules.addModuleToGame(weather);
