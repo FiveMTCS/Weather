@@ -2,8 +2,6 @@ build/
 node_modules/
 
 package-lock.json
-.prettierignore
-
 
 **/*/srv_databaseConfig.ts
 **/*/srv_databaseConfig.js
